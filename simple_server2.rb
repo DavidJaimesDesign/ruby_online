@@ -4,10 +4,10 @@ require 'uri'
 WEB_ROOT = './public'
 
 CONTENT_TYPE_MAPPING = {
-	'html' => 'text/html'
-	'txt' => 'text/plain'
-	'png' => 'image/png'
-	'jpg' => 'image/jpeg'
+	'html' => 'text/html',
+	'txt' => 'text/plain',
+	'png' => 'image/png',
+	'jpg' => 'image/jpeg',
 }
 
 DEFAULT_CONTENT_TYPE = "application/octect-stream"
@@ -22,7 +22,13 @@ def requested_file(request_line)
 	path = URI.unescape(URI(request_uri).path)
 
 	clean = []
-	parts = 
+	parts = path.split("/")
+
+	parts.each do |part|
+		next if part.empty? || part == '.'
+		part == '..'? clean.pop : clean << part
+	end
+	File.join(WEB_ROOT, *clean)
 end
 
 
@@ -33,12 +39,13 @@ loop do
 	request_line = socket.gets
 	STDERR.puts request_line
 	path = requested_file(request_line)
+	path = File.join(path, 'index.html') if File.directory?(path)
 
 	if File.exist?(path) && !File.directory?(path)
 		File.open(path, "rb") do |file|
 			socket.print  "HTTP/1.1 200 OK\r\n" +
-           		"Content-Type: text/plain\r\n" +
-	          	"Content-Length: #{response.bytesize}\r\n" +
+           		"Content-Type: #{content_type(file)}\r\n" +
+	          	"Content-Length: #{file.size}\r\n" +
 	           	"Connection: close\r\n"
 			socket.print "\r\n"
 
