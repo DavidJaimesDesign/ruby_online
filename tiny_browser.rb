@@ -1,11 +1,14 @@
 require 'socket'
+require 'json'
+
+
  
 host = 'localhost'        # The web server
-port = 2345                           # Default HTTP port
-path = "/index.html"                 # The file we want 
+port = 2345                           # Default HTTP port 
 
 # This is the HTTP request we send to fetch a file
-request = "GET #{path} HTTP/1.0\r\n\r\n"
+request = "#{post_get} #{path} HTTP/1.0\r\n\r\n"
+
 
 socket = TCPSocket.open(host,port)  # Connect to server
 socket.print(request)               # Send request

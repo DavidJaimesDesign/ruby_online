@@ -1,5 +1,6 @@
 require 'socket'
 require 'uri'
+require 'json'
 
 WEB_ROOT = './public'
 
