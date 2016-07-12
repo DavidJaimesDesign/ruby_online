@@ -18,7 +18,7 @@ def content_type(path)
 	CONTENT_TYPE_MAPPING.fetch(ext, DEFAULT_CONTENT_TYPE)
 end
 
-def requested_file(request_line)
+def requested_file(request_line)#this finds the path 
 	request_uri = request_line.split(" ")[1]
 	path = URI.unescape(URI(request_uri).path)
 
@@ -40,27 +40,33 @@ loop do
 	request_line = socket.gets
 	STDERR.puts request_line
 	path = requested_file(request_line)
-	path = File.join(path, 'index.html') if File.directory?(path)
+	path = File.join(path, 'index.html') if File.directory?(path) #this makes just localhost link to the index.html file
 
-	if File.exist?(path) && !File.directory?(path)
-		File.open(path, "rb") do |file|
-			socket.print  "HTTP/1.1 200 OK\r\n" +
-           		"Content-Type: #{content_type(file)}\r\n" +
-	          	"Content-Length: #{file.size}\r\n" +
-	           	"Connection: close\r\n"
+	if request_line.split(" ")[0] == "GET"
+		if File.exist?(path) && !File.directory?(path)
+			File.open(path, "rb") do |file|
+				socket.print  "HTTP/1.1 200 OK\r\n" +
+    	       		"Content-Type: #{content_type(file)}\r\n" +
+		          	"Content-Length: #{file.size}\r\n" +
+		           	"Connection: close\r\n"
+				socket.print "\r\n"
+	
+				IO.copy_stream(file, socket)
+			end
+		else
+			message = "File not found\n"
+			socket.print "HTTP/1.1 404 Not Found\r\n" + 
+						"Content-Type: text/plain\r\n" +
+						 "Content-Length: #{message.size}\r\n" +
+						 "Connection: closer\r\n"
 			socket.print "\r\n"
 
-			IO.copy_stream(file, socket)
+			socket.print message
 		end
-	else
-		message = "File not found\n"
-		socket.print "HTTP/1.1 404 Not Found\r\n" +
-					 "Content-Type: text/plain\r\n" +
-					 "Content-Length: #{message.size}\r\n" +
-					 "Connection: closer\r\n"
-		socket.print "\r\n"
-
-		socket.print message
-	end
-	socket.close
+		socket.close
+	elsif request_line.split(" ")[0] == "POST"
+		puts "Hey you asked for a post request that is coming soon"
+	else 
+		puts "ERROR NOT A POST OR A GET REQUEST RE EVAL YO LIFE"
+	end		
 end
