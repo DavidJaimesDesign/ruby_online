@@ -37,9 +37,15 @@ server = TCPServer.new('localhost',2345)
 
 loop do
 	socket = server.accept 
-	request_line = socket.gets
+	request = ""
+	while line = socket.gets
+    	request << line
+    	break if line == "\r\n"
+  	end
+  	puts request.inspect
 	request_header, request_body = request.split("\r\n\r\n", 2)
-	path = requested_file(request_line)
+	puts request_body.inspect
+	path = requested_file(request)
 	path = File.join(path, 'index.html') if File.directory?(path) #this makes just localhost link to the index.html file
 	if File.exist?(path) && !File.directory?(path)
 	File.open(path, "rb") do |file|
@@ -49,16 +55,18 @@ loop do
 		           	"Connection: close\r\n"
 		socket.print "\r\n"
 			
-		if request_line.split(" ")[0] == "GET"
+		if request.split(" ")[0] == "GET"
 			IO.copy_stream(file, socket)
 
-		elsif request_line.split(" ")[0] == "POST"
+		elsif request.split(" ")[0] == "POST"
 			thanks = File.read(path)
 			params = {}
-			params = response.body
-			params[:viking] = viking #I need the params from the post reques
+			params[:viking] = JSON.parse(request_body)
+			puts params#I need the params from the post reques
 			insert = "<li>Name: #{params[:viking]["name"]}</li><li>Email: #{params[:viking]["email"]}</li>"
-			thanks.gsub!(/<%= yield %>/, insert)		
+			thanks.gsub!(/<%= yield %>/, insert)	
+			socket.print thanks
+			puts thanks	
 		else 	
 			puts "ERROR NOT A POST OR A GET REQUEST RE EVAL YO LIFE"
 		end	
