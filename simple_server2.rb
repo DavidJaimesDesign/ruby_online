@@ -37,14 +37,9 @@ server = TCPServer.new('localhost',2345)
 
 loop do
 	socket = server.accept 
-	request = ""
-	while line = socket.gets
-    	request << line
-    	break if line == "\r\n"
-  	end
+	request = socket.recv(100000000)
   	puts request.inspect
 	request_header, request_body = request.split("\r\n\r\n", 2)
-	puts request_body.inspect
 	path = requested_file(request)
 	path = File.join(path, 'index.html') if File.directory?(path) #this makes just localhost link to the index.html file
 	if File.exist?(path) && !File.directory?(path)
@@ -62,7 +57,8 @@ loop do
 			thanks = File.read(path)
 			params = {}
 			params[:viking] = JSON.parse(request_body)
-			puts params#I need the params from the post reques
+			puts "XXX"
+			puts params
 			insert = "<li>Name: #{params[:viking]["name"]}</li><li>Email: #{params[:viking]["email"]}</li>"
 			thanks.gsub!(/<%= yield %>/, insert)	
 			socket.print thanks

@@ -32,20 +32,10 @@ elsif post_get == "POST"
 	host = 'localhost'
 	port = 2345
 
-	request_line = "POST /thanks.html HTTP/1.0"
-    form_data = {viking: {name: name, email: email}}.to_json
-    content_length = "Content-Length: #{form_data.length}"
-    request = [request_line, content_length, "", form_data].join("\r\n")
-    puts request
-
-  	socket = TCPSocket.open(host, port)
-  	socket.print(request)
-  	response = socket.read
-  	parse_response(response)
+uri = URI.parse("http://localhost:2345/#{path}")
+http = Net::HTTP.new(uri.host, uri.port)
+request = Net::HTTP::Post.new(uri.request_uri)
+request.body = viking.to_json
+response = http.request(request)
   	
 end
-#uri = URI.parse("http://localhost:2345/#{path}")
-#	http = Net::HTTP.new(uri.host, uri.port)
-#	request = Net::HTTP::Post.new(uri.request_uri)
-#	request.set_form_data(viking)
-#	response = http.request(request)
